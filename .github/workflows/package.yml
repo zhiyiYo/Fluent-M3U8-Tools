@@ -1,0 +1,31 @@
+name: Package
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create ZIP packages
+        run: |
+          for os in Linux macOS Windows; do
+            if [ -d "$os" ]; then
+              find "$os" -type f \( -name "N_m3u8DL-RE" -o -name "N_m3u8DL-RE.exe" -o -name "ffmpeg" -o -name "ffmpeg.exe" \) | while read file; do
+                dir=$(dirname "$file")
+                zip_name=$(echo "$dir" | tr '/' '-')
+                zip -j "$zip_name.zip" "$file"
+              done
+            fi
+          done
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: "*.zip"
+
